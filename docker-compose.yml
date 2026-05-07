@@ -1,0 +1,10 @@
+version: '3'
+services:
+  jupyter:
+    image: jupyter/pyspark-notebook
+    ports:
+      - "8889:8888"
+      - "4040:4040"
+    volumes:
+      - ./batch/notebooks:/home/jovyan/notebooks
+      - E:/Personal-Project/data/raw:/home/jovyan/data
