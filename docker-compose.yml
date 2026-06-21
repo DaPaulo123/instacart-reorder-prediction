@@ -1,9 +1,19 @@
 
 version: '3'
+networks:
+  instacart-network:
+    driver: bridge
+
 services:
   jupyter:
+      networks:
+        - instacart-network
+      build:
+        context: .
+        dockerfile: Dockerfile.jupyter
       container_name: instacart-jupyter
-      image: jupyter/pyspark-notebook
+      environment:
+        - PYTHONPATH=/usr/local/spark-3.5.0-bin-hadoop3/python:/usr/local/spark-3.5.0-bin-hadoop3/python/lib/py4j-0.10.9.7-src.zip
       ports:
         - "8889:8888"
         - "4040:4040"
@@ -12,15 +22,21 @@ services:
         - E:/Personal-Project/data/raw:/home/jovyan/data
   
   zookeeper:
+      networks:
+      - instacart-network
       container_name: instacart-zookeeper
-      image: confluentinc/cp-zookeeper:7.3.0
+      image: confluentinc/cp-zookeeper:7.4.0
       environment:
         ZOOKEEPER_CLIENT_PORT: 2181
         ZOOKEEPER_TICK_TIME: 2000
+      ports:
+      - "2181:2181"
 
   kafka:
+      networks:
+        - instacart-network
       container_name: instacart-kafka
-      image: confluentinc/cp-kafka:7.3.0
+      image: confluentinc/cp-kafka:7.4.0
       depends_on:
         - zookeeper
       ports:
@@ -34,13 +50,74 @@ services:
         KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
   
   redis:
+    networks:
+      - instacart-network
     container_name: instacart-redis
     image: redis:latest
     ports:
       - "6379:6379"
   
   mongodb:
+    networks:
+      - instacart-network
     container_name: instacart-mongodb
     image: mongo:latest
     ports:
       - "27017:27017"
+
+  namenode:
+    networks:
+      - instacart-network
+    image: bde2020/hadoop-namenode:2.0.0-hadoop3.2.1-java8
+    container_name: instacart-namenode
+    environment:
+      - CLUSTER_NAME=instacart
+    env_file:
+      - ./hadoop.env
+    ports:
+      - "9870:9870"
+      - "8020:8020"
+    volumes:
+      - hadoop_namenode:/hadoop/dfs/name
+
+  datanode:
+      networks:
+        - instacart-network
+      image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
+      container_name: instacart-datanode1
+      depends_on:
+        - namenode
+      env_file:
+        - ./hadoop.env
+      volumes:
+        - hadoop_datanode1:/hadoop/dfs/data
+
+  datanode2:
+      networks:
+        - instacart-network
+      image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
+      container_name: instacart-datanode2
+      depends_on:
+        - namenode
+      env_file:
+        - ./hadoop.env
+      volumes:
+        - hadoop_datanode2:/hadoop/dfs/data
+
+  datanode3:
+      networks:
+      - instacart-network
+      image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
+      container_name: instacart-datanode3
+      depends_on:
+        - namenode
+      env_file:
+        - ./hadoop.env
+      volumes:
+        - hadoop_datanode3:/hadoop/dfs/data
+
+volumes:
+  hadoop_namenode:
+  hadoop_datanode1:
+  hadoop_datanode2:
+  hadoop_datanode3:

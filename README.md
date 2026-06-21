@@ -52,6 +52,9 @@ The dataset is large enough (32M+ rows) to justify Big Data tools, and we proces
 - Activate Docker environment:
 docker-compose up
 
+- Give permission to HDFS:
+docker exec -it instacart-namenode hdfs dfs -chmod 777 /  
+
 - Open Jupiter lab: http://localhost:8889/
 - Take the token in the output of Docker terminal then access to the notebook
 ```

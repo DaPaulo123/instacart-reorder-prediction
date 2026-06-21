@@ -1,0 +1,12 @@
+FROM jupyter/pyspark-notebook
+
+USER root
+
+RUN curl -L -o /usr/local/spark-3.5.0-bin-hadoop3/jars/iceberg-spark-runtime-3.5_2.12-1.4.2.jar \
+    https://repo1.maven.org/maven2/org/apache/iceberg/iceberg-spark-runtime-3.5_2.12/1.4.2/iceberg-spark-runtime-3.5_2.12-1.4.2.jar
+
+RUN pip install lightgbm scikit-learn pymongo kafka-python redis
+
+USER jovyan
+
+ENV PYTHONPATH=/usr/local/spark-3.5.0-bin-hadoop3/python:/usr/local/spark-3.5.0-bin-hadoop3/python/lib/py4j-0.10.9.7-src.zip

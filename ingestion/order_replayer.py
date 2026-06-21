@@ -8,15 +8,15 @@ spark = SparkSession.builder \
     .config("spark.driver.memory", "4g") \
     .getOrCreate()
 
+df_train = spark.read.csv(r'E:/Personal-Project/data/raw/order_products__train.csv', header=True, inferSchema=True)
 df_orders = spark.read.csv(r'E:/Personal-Project/data/raw/orders.csv', header=True, inferSchema=True)
-df_prior = spark.read.csv(r'E:/Personal-Project/data/raw/order_products__prior.csv', header=True, inferSchema=True)
 df_orders = df_orders.fillna(0, subset=['days_since_prior_order'])
 window = Window.partitionBy('user_id').orderBy('order_number')
 df_orders = df_orders.withColumn('cumulative_days', sum('days_since_prior_order').over(window))
 df_orders = df_orders.withColumn('timestamp_hour', 
     col('cumulative_days') * 24 + col('order_hour_of_day'))
                                 
-df_joined = df_orders.join(df_prior, on='order_id', how='left')
+df_joined = df_train.join(df_orders, on='order_id', how='left')
 df_replay = df_joined.groupBy('order_id', 'user_id', 'order_dow', 'order_hour_of_day', 'timestamp_hour') \
     .agg(collect_list('product_id').alias('products'))
 
